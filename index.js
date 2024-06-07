@@ -62,7 +62,7 @@ io.on("connection", (socket) => {
   });
   socket.on("renseignefeedback", (donner) => {
     console.log(donner);
-   
+
     if (donner.type === "post") {
       try {
         const {
@@ -107,7 +107,7 @@ io.on("connection", (socket) => {
                 });
               } else {
                 modelEtape
-                  .findOne({ label: feedbackSelect?.idLabel })
+                  .findOne({ label: feedbackSelect.idLabel })
                   .lean()
                   .then((etape) => {
                     if (etape) {
@@ -132,14 +132,14 @@ io.on("connection", (socket) => {
                   {
                     $push: {
                       result: {
-                        feedbackSelect: feedbackSelect?.title,
+                        feedbackSelect: feedbackSelect.title,
                         commentaire,
                         customer_id,
                         status,
                         role,
-                        dateDebut: result?.updatedAt,
-                        delaiPrevu: action?.delai,
-                        action: action?.title,
+                        dateDebut: result.updatedAt,
+                        delaiPrevu: action.delai,
+                        action: action.title,
                         dateFin: new Date().getTime(),
                         codeAgent,
                       },
@@ -292,20 +292,20 @@ io.on("connection", (socket) => {
                   {
                     $push: {
                       result: {
-                        // action: ancienAction?.title,
+                        action: ancienAction.title,
                         commentaire,
                         customer_id,
                         status,
                         role,
                         feedbackSelect: action.title,
-                        dateDebut: result?.updatedAt,
-                        delaiPrevu: ancienAction?.delai,
+                        dateDebut: result.updatedAt,
+                        delaiPrevu: ancienAction.delai,
                         dateFin: new Date().getTime(),
                         codeAgent,
                       },
                     },
                     $set: {
-                      actionEnCours: action?.idAction,
+                      actionEnCours: action.idAction,
                       updatedAt: new Date().getTime(),
                     },
                   },
