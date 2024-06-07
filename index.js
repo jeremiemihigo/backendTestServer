@@ -62,163 +62,7 @@ io.on("connection", (socket) => {
   });
   socket.on("renseignefeedback", (donner) => {
     console.log(donner);
-    if (donner.type === "feedback") {
-      const {
-        commentaire,
-        customer_id,
-        _idClient,
-        status,
-        role,
-        action,
-        ancienAction,
-        codeAgent,
-      } = donner;
-      try {
-        asyncLab.waterfall(
-          [
-            function (done) {
-              modelClient
-                .findById(_idClient)
-                .lean()
-                .then((result) => {
-                  if (result) {
-                    done(null, result);
-                  } else {
-                    let erreur = {
-                      content: "Client introuvable",
-                      error: "error",
-                    };
-                    io.to(socket.id).emit("renseigne", erreur);
-                  }
-                })
-                .catch(function (err) {
-                  console.log(err);
-                });
-            },
-
-            function (result, done) {
-              modelClient
-                .findByIdAndUpdate(
-                  result._id,
-                  {
-                    $push: {
-                      result: {
-                        // action: ancienAction?.title,
-                        commentaire,
-                        customer_id,
-                        status,
-                        role,
-                        feedbackSelect: action?.title,
-                        dateDebut: result?.updatedAt,
-                        delaiPrevu: ancienAction?.delai,
-                        dateFin: new Date().getTime(),
-                        codeAgent,
-                      },
-                    },
-                    $set: {
-                      actionEnCours: action?.idAction,
-                      updatedAt: new Date().getTime(),
-                    },
-                  },
-                  { new: true }
-                )
-                .then((response) => {
-                  done(null, response);
-                })
-                .catch(function (err) {
-                  let erreur = { content: "Error :" + err, error: "error" };
-                  io.to(socket.id).emit("renseigne", erreur);
-                });
-            },
-            function (client, done) {
-              const periodes = periode();
-              modelClient
-                .aggregate([
-                  { $match: { _id: new ObjectId(client._id) } },
-                  {
-                    $lookup: {
-                      from: "actions",
-                      localField: "actionEnCours",
-                      foreignField: "idAction",
-                      as: "action",
-                    },
-                  },
-                  { $unwind: "$action" },
-                  {
-                    $lookup: {
-                      from: "status",
-                      localField: "action.idStatus",
-                      foreignField: "idStatus",
-                      as: "status",
-                    },
-                  },
-                  { $unwind: "$status" },
-                  {
-                    $lookup: {
-                      from: "statutactions",
-                      localField: "action.idAction",
-                      foreignField: "idAction",
-                      as: "statutaction",
-                    },
-                  },
-                  {
-                    $lookup: {
-                      from: "roles",
-                      localField: "action.idRole",
-                      foreignField: "id",
-                      as: "role",
-                    },
-                  },
-                  {
-                    $addFields: {
-                      id: "$_id",
-                      actionTitle: "$action.title",
-                      statusTitle: "$status.title",
-                    },
-                  },
-                  {
-                    $lookup: {
-                      from: "datatotracks",
-                      let: { codeclient: "$unique_account_id" },
-                      pipeline: [
-                        {
-                          $match: {
-                            $expr: {
-                              $and: [
-                                { $eq: ["$month", periodes] },
-                                {
-                                  $eq: ["$unique_account_id", "$$codeclient"],
-                                },
-                              ],
-                            },
-                          },
-                        },
-                      ],
-                      as: "client",
-                    },
-                  },
-                ])
-                .then((response) => {
-                  if (response.length > 0) {
-                    done(response);
-                  }
-                });
-            },
-          ],
-          function (client) {
-            if (client) {
-              let result = { content: client, error: "success" };
-              io.emit("renseigne", result);
-            } else {
-              let erreur = { content: "Error :", error: "error" };
-              io.to(socket.id).emit("renseigne", erreur);
-            }
-          }
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    }
+   
     if (donner.type === "post") {
       try {
         const {
@@ -315,6 +159,163 @@ io.on("connection", (socket) => {
                     content: "Error " + err,
                     error: "error",
                   };
+                  io.to(socket.id).emit("renseigne", erreur);
+                });
+            },
+            function (client, done) {
+              const periodes = periode();
+              modelClient
+                .aggregate([
+                  { $match: { _id: new ObjectId(client._id) } },
+                  {
+                    $lookup: {
+                      from: "actions",
+                      localField: "actionEnCours",
+                      foreignField: "idAction",
+                      as: "action",
+                    },
+                  },
+                  { $unwind: "$action" },
+                  {
+                    $lookup: {
+                      from: "status",
+                      localField: "action.idStatus",
+                      foreignField: "idStatus",
+                      as: "status",
+                    },
+                  },
+                  { $unwind: "$status" },
+                  {
+                    $lookup: {
+                      from: "statutactions",
+                      localField: "action.idAction",
+                      foreignField: "idAction",
+                      as: "statutaction",
+                    },
+                  },
+                  {
+                    $lookup: {
+                      from: "roles",
+                      localField: "action.idRole",
+                      foreignField: "id",
+                      as: "role",
+                    },
+                  },
+                  {
+                    $addFields: {
+                      id: "$_id",
+                      actionTitle: "$action.title",
+                      statusTitle: "$status.title",
+                    },
+                  },
+                  {
+                    $lookup: {
+                      from: "datatotracks",
+                      let: { codeclient: "$unique_account_id" },
+                      pipeline: [
+                        {
+                          $match: {
+                            $expr: {
+                              $and: [
+                                { $eq: ["$month", periodes] },
+                                {
+                                  $eq: ["$unique_account_id", "$$codeclient"],
+                                },
+                              ],
+                            },
+                          },
+                        },
+                      ],
+                      as: "client",
+                    },
+                  },
+                ])
+                .then((response) => {
+                  if (response.length > 0) {
+                    done(response);
+                  }
+                });
+            },
+          ],
+          function (client) {
+            if (client) {
+              let result = { content: client, error: "success" };
+              io.emit("renseigne", result);
+            } else {
+              let erreur = { content: "Error :", error: "error" };
+              io.to(socket.id).emit("renseigne", erreur);
+            }
+          }
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    if (donner.type === "feedback") {
+      const {
+        commentaire,
+        customer_id,
+        _idClient,
+        status,
+        role,
+        action,
+        ancienAction,
+        codeAgent,
+      } = donner;
+      try {
+        asyncLab.waterfall(
+          [
+            function (done) {
+              modelClient
+                .findById(_idClient)
+                .lean()
+                .then((result) => {
+                  if (result) {
+                    done(null, result);
+                  } else {
+                    let erreur = {
+                      content: "Client introuvable",
+                      error: "error",
+                    };
+                    io.to(socket.id).emit("renseigne", erreur);
+                  }
+                })
+                .catch(function (err) {
+                  console.log(err);
+                });
+            },
+
+            function (result, done) {
+              modelClient
+                .findByIdAndUpdate(
+                  result._id,
+                  {
+                    $push: {
+                      result: {
+                        // action: ancienAction?.title,
+                        commentaire,
+                        customer_id,
+                        status,
+                        role,
+                        feedbackSelect: action.title,
+                        dateDebut: result?.updatedAt,
+                        delaiPrevu: ancienAction?.delai,
+                        dateFin: new Date().getTime(),
+                        codeAgent,
+                      },
+                    },
+                    $set: {
+                      actionEnCours: action?.idAction,
+                      updatedAt: new Date().getTime(),
+                    },
+                  },
+                  { new: true }
+                )
+                .then((response) => {
+                  done(null, response);
+                })
+                .catch(function (err) {
+                  let erreur = { content: "Error :" + err, error: "error" };
                   io.to(socket.id).emit("renseigne", erreur);
                 });
             },
