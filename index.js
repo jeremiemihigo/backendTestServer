@@ -412,7 +412,7 @@ io.on("connection", (socket) => {
     io.emit("userConnected", onlineuser);
   });
 });
-app.get("/message", (req, res) => {
+app.get("/", (req, res) => {
   return res.status(200).json("je suis un message");
 });
 // const portIO = process.env.PORT || 800;
