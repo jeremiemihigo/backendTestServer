@@ -103,7 +103,7 @@ io.on("connection", (socket) => {
                   {
                     $push: {
                       result: {
-                        action: ancienAction?.title,
+                        // action: ancienAction?.title,
                         commentaire,
                         customer_id,
                         status,
