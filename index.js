@@ -61,6 +61,7 @@ io.on("connection", (socket) => {
     io.emit("userConnected", onlineuser);
   });
   socket.on("renseignefeedback", (donner) => {
+    console.log(donner);
     if (donner.type === "feedback") {
       const {
         commentaire,
