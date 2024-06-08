@@ -418,7 +418,8 @@ app.get("/", (req, res) => {
 // const portIO = process.env.PORT || 800;
 // io.listen(portIO);
 //Start server
-app.listen(port, () => {
+const hostname = "127.0.0.1";
+app.listen(port, hostname, () => {
   console.log(`Server running on port ${port}`);
 });
 
